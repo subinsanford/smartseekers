@@ -4,11 +4,11 @@ import {
   FileText, Users, Clock, CheckCircle2,
   DollarSign, CreditCard, Activity, Bell,
   Mic, Settings, Home, TrendingUp, BarChart3,
-  Eye, Pencil, UserCircle, Briefcase
+  Eye, Pencil, UserCircle, Briefcase, PieChart as PieChartIcon
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 import styles from "./page.module.css";
 
@@ -28,11 +28,9 @@ const userCreditData = [
 ];
 
 const interviewStatusData = [
-  { name: "Cancelled",   value: 2, color: "#ef4444" },
-  { name: "Completed",   value: 6, color: "#22c55e" },
-  { name: "No Show",     value: 1, color: "#6b7280" },
-  { name: "Rescheduled", value: 3, color: "#3b82f6" },
-  { name: "Scheduled",   value: 3, color: "#f59e0b" },
+  { name: "Completed",   value: 6, color: "#00C49F" },
+  { name: "No Show",     value: 4, color: "#667085" },
+  { name: "Rescheduled", value: 3, color: "#3B82F6" },
 ];
 
 const topJobs = [
@@ -87,28 +85,6 @@ function StatCard({
   );
 }
 
-/* ─── Custom Pie Label ─── */
-const RADIAN = Math.PI / 180;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function renderCustomLabel(props: any) {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
-  if (percent < 0.05) return null;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  return (
-    <text
-      x={x} y={y}
-      fill="white"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize={12}
-      fontWeight={700}
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-}
 
 /* ─── Page ─── */
 export default function RecruiterHome() {
@@ -225,39 +201,48 @@ export default function RecruiterHome() {
 
           {/* Interview Status Distribution */}
           <div className={styles.card}>
-            <div className={styles.cardHeader}>
+            <div className={styles.statusCardHeader}>
               <div className={styles.cardTitleGroup}>
-                <Clock size={15} className={styles.cardTitleIcon} />
+                <PieChartIcon size={15} style={{ color: "#6366f1" }} />
                 <h2 className={styles.cardTitle}>Interview Status Distribution</h2>
               </div>
-              <p className={styles.cardSubtitle}>Current breakdown of all Interviews</p>
+              <p className={styles.cardSubtitleRight}>Current breakdown of all Interviews</p>
             </div>
             <ResponsiveContainer width="100%" height={270}>
               <PieChart>
                 <Pie
                   data={interviewStatusData}
                   cx="50%"
-                  cy="45%"
-                  innerRadius={70}
-                  outerRadius={110}
-                  paddingAngle={2}
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={105}
+                  paddingAngle={4}
                   dataKey="value"
+                  stroke="none"
                   labelLine={false}
-                  label={renderCustomLabel}
                 >
                   {interviewStatusData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => (
-                    <span style={{ fontSize: 11, color: "#6b7280" }}>{value}</span>
-                  )}
-                />
               </PieChart>
             </ResponsiveContainer>
+
+            {/* Custom static legend — always shows all 5 names */}
+            <div className={styles.pieLegend}>
+              {[
+                { name: "Cancelled",   color: "#FF4D4F" },
+                { name: "Completed",   color: "#00C49F" },
+                { name: "No Show",     color: "#667085" },
+                { name: "Rescheduled", color: "#3B82F6" },
+                { name: "Scheduled",   color: "#FFBB28" },
+              ].map((item) => (
+                <span key={item.name} className={styles.pieLegendItem}>
+                  <span className={styles.pieLegendDot} style={{ background: item.color }} />
+                  <span style={{ color: item.color }}>{item.name}</span>
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Top Interviews */}
@@ -272,7 +257,7 @@ export default function RecruiterHome() {
               <p className={styles.topSectionLabel}>Top Jobs</p>
               <div className={styles.topTagsWrap}>
                 {topJobs.map((j) => (
-                  <span key={j.title} className={styles.topTag} style={{ background: "#ede9fe", color: "#6d28d9" }}>
+                  <span key={j.title} className={styles.topTag} style={{ background: "#8b5cf6", color: "#ffffff" }}>
                     <strong style={{ fontSize: "0.72rem" }}>{j.title}</strong>
                     <span className={styles.tagCount}>{j.interviews} interviews</span>
                   </span>
@@ -281,15 +266,15 @@ export default function RecruiterHome() {
               <p className={styles.topSectionLabel} style={{ marginTop: "1rem" }}>Top Candidates</p>
               <div className={styles.topTagsWrap}>
                 {topCandidates.map((c) => (
-                  <span key={c.name} className={styles.topTag} style={{ background: "#e0e7ff", color: "#4338ca" }}>
+                  <span key={c.name} className={styles.topTag} style={{ background: "#60a5fa", color: "#ffffff" }}>
                     <strong style={{ fontSize: "0.72rem" }}>{c.name}</strong>
                     <span className={styles.tagCount}>{c.interviews} interviews</span>
                   </span>
                 ))}
               </div>
               <div className={styles.legendRow}>
-                <span className={styles.legendDot} style={{ background: "#6d28d9" }} /> Jobs
-                <span className={styles.legendDot} style={{ background: "#4338ca", marginLeft: 12 }} /> Candidates
+                <span className={styles.legendCircle} style={{ background: "#8b5cf6" }} /> Jobs
+                <span className={styles.legendCircle} style={{ background: "#60a5fa", marginLeft: 12 }} /> Candidates
               </div>
             </div>
           </div>
@@ -301,7 +286,7 @@ export default function RecruiterHome() {
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitleGroup}>
-                <FileText size={15} style={{ color: "#f59e0b" }} />
+                <FileText size={15} style={{ color: "#3b82f6" }} />
                 <h2 className={styles.cardTitle}>Active Job Postings</h2>
               </div>
             </div>
@@ -323,7 +308,7 @@ export default function RecruiterHome() {
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitleGroup}>
-                <FileText size={15} style={{ color: "#f59e0b" }} />
+                <FileText size={15} style={{ color: "#3b82f6" }} />
                 <h2 className={styles.cardTitle}>Draft Job Postings</h2>
               </div>
             </div>

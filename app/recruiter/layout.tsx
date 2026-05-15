@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Briefcase,
@@ -35,6 +35,13 @@ const bottomItems = [
 
 export default function RecruiterLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear any stored tokens or auth state here
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
 
   return (
     <div className={styles.shell}>
@@ -65,7 +72,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
               <span>{label}</span>
             </Link>
           ))}
-          <button className={styles.logoutBtn}>
+          <button className={styles.logoutBtn} onClick={handleLogout}>
             <LogOut size={17} />
             <span>Log out</span>
             <span className={styles.issueBadge}>1 Issue ×</span>

@@ -3,10 +3,44 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { LogIn, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { login } from "../../lib/api";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!email || !password) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const data = await login(email, password);
+      console.log("Login successful:", data);
+      
+      // Store token if available, e.g., localStorage.setItem('token', data.token);
+      
+      // Redirect to recruiter home or dashboard
+      router.push("/recruiter/home");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred during login.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fafbfc] flex flex-col font-sans">
@@ -52,28 +86,36 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form className="w-full flex flex-col gap-5">
-            {/* Email Field with explicit error state matching screenshot */}
+          <form className="w-full flex flex-col gap-5" onSubmit={handleSubmit}>
+            {error && (
+              <div className="w-full p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
+            
+            {/* Email Field */}
             <div className="w-full flex flex-col gap-1.5">
               <label className="text-[#203a61] text-sm font-semibold">E-mail</label>
               <input 
                 type="email" 
                 placeholder="Enter e-mail address" 
-                className="w-full px-3.5 py-2.5 text-sm border border-red-500 rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-red-500"
-                defaultValue=""
+                className={`w-full px-3.5 py-2.5 text-sm border ${error && !email ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <span className="text-red-500 text-xs">Please fill in this required field</span>
+              {error && !email && <span className="text-red-500 text-xs">Please fill in this required field</span>}
             </div>
 
-            {/* Password Field with explicit error state */}
+            {/* Password Field */}
             <div className="w-full flex flex-col gap-1.5">
               <label className="text-[#203a61] text-sm font-semibold">Password</label>
               <div className="relative">
                 <input 
                   type={showPassword ? "text" : "password"} 
                   placeholder="Enter password" 
-                  className="w-full px-3.5 py-2.5 pr-10 text-sm border border-red-500 rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-red-500"
-                  defaultValue=""
+                  className={`w-full px-3.5 py-2.5 pr-10 text-sm border ${error && !password ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button 
                   type="button" 
@@ -83,15 +125,20 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} strokeWidth={2} />}
                 </button>
               </div>
-              <span className="text-red-500 text-xs">Please fill in this required field</span>
+              {error && !password && <span className="text-red-500 text-xs">Please fill in this required field</span>}
             </div>
 
             {/* Login Button */}
             <button 
               type="submit" 
-              className="w-full bg-[#87a1c0] hover:bg-[#7691af] text-white font-medium py-2.5 rounded-lg mt-2 transition-colors"
+              disabled={isLoading}
+              className="w-full bg-[#87a1c0] hover:bg-[#7691af] text-white font-medium py-2.5 rounded-lg mt-2 transition-colors disabled:opacity-70 flex justify-center items-center"
             >
-              Login
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
 
