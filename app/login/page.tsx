@@ -31,7 +31,9 @@ export default function LoginPage() {
       const data = await login(email, password);
       console.log("Login successful:", data);
       
-      // Store token if available, e.g., localStorage.setItem('token', data.token);
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
       
       // Redirect to recruiter home or dashboard
       router.push("/recruiter/home");
