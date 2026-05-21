@@ -52,11 +52,12 @@ export default function LoginPage() {
           {/* Logo Approximation */}
           <div className="relative flex items-center">
              <Image 
-               src="https://sit.seekersplus.ai/assets/images/logo.png" 
+               src="/logo.svg" 
                alt="SmartSeekers" 
                width={160} 
                height={40} 
                className="h-10 w-auto" 
+               style={{ width: "auto" }}
                onError={(e) => {
                  // Fallback if we can't load the real image
                  e.currentTarget.style.display = 'none';

@@ -48,7 +48,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarLogo}>
-          <Image src="/logo.svg" alt="Smart Seekers" width={120} height={38} priority />
+          <Image src="/logo.svg" alt="Smart Seekers" width={120} height={38} style={{ width: "auto" }} priority />
         </div>
 
         <nav className={styles.sidebarNav}>

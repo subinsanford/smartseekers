@@ -155,6 +155,7 @@ export default function Home() {
         width={200}
         height={48}
         className="h-12 w-auto" // better than forcing width
+        style={{ width: "auto" }}
         priority
       />
     </div>
