@@ -13,13 +13,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!email || !password) {
       setError("Please fill in all required fields");
       return;
@@ -30,11 +30,30 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       console.log("Login successful:", data);
-      
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+
+      let token = data.token || data.access_token || data.data?.token || data.data?.access_token;
+
+      // Fallback: search the entire response payload for anything that looks like a JWT token
+      if (!token) {
+        const jsonStr = JSON.stringify(data);
+        const jwtMatch = jsonStr.match(/(?:token|access_token|jwt)["']?\s*:\s*["'](ey[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["']/i);
+        if (jwtMatch) {
+          token = jwtMatch[1];
+        } else {
+          // General fallback for just a raw JWT string
+          const rawMatch = jsonStr.match(/(ey[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)/);
+          if (rawMatch) token = rawMatch[1];
+        }
       }
-      
+
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        alert("SYSTEM DEBUG - We couldn't find the authorization token in the server response. Server responded with: " + JSON.stringify(data));
+        setIsLoading(false);
+        return;
+      }
+
       // Redirect to recruiter home or dashboard
       router.push("/recruiter/home");
     } catch (err: any) {
@@ -51,29 +70,29 @@ export default function LoginPage() {
         <Link href="/" className="flex items-center gap-2 text-[#1b3b64]">
           {/* Logo Approximation */}
           <div className="relative flex items-center">
-             <Image 
-               src="/logo.svg" 
-               alt="SmartSeekers" 
-               width={160} 
-               height={40} 
-               className="h-10 w-auto" 
-               style={{ width: "auto" }}
-               onError={(e) => {
-                 // Fallback if we can't load the real image
-                 e.currentTarget.style.display = 'none';
-                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
-               }} 
-             />
-             <div className="hidden flex items-center gap-2">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#89c1ff]">
-                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
-                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
-                </svg>
-                <div className="flex flex-col leading-tight font-bold">
-                  <span className="text-[#89a1bf]">Smart</span>
-                  <span className="text-[#89a1bf]">Seekers</span>
-                </div>
-             </div>
+            <Image
+              src="/logo.svg"
+              alt="SmartSeekers"
+              width={160}
+              height={40}
+              className="h-10 w-auto"
+              style={{ width: "auto" }}
+              onError={(e) => {
+                // Fallback if we can't load the real image
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden flex items-center gap-2">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#89c1ff]">
+                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+              </svg>
+              <div className="flex flex-col leading-tight font-bold">
+                <span className="text-[#89a1bf]">Smart</span>
+                <span className="text-[#89a1bf]">Seekers</span>
+              </div>
+            </div>
           </div>
         </Link>
       </header>
@@ -95,13 +114,13 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
-            
+
             {/* Email Field */}
             <div className="w-full flex flex-col gap-1.5">
               <label className="text-[#203a61] text-sm font-semibold">E-mail</label>
-              <input 
-                type="email" 
-                placeholder="Enter e-mail address" 
+              <input
+                type="email"
+                placeholder="Enter e-mail address"
                 className={`w-full px-3.5 py-2.5 text-sm border ${error && !email ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-blue-500`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -113,15 +132,15 @@ export default function LoginPage() {
             <div className="w-full flex flex-col gap-1.5">
               <label className="text-[#203a61] text-sm font-semibold">Password</label>
               <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Enter password" 
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter password"
                   className={`w-full px-3.5 py-2.5 pr-10 text-sm border ${error && !password ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-lg text-black focus:outline-none focus:ring-1 focus:ring-blue-500`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -132,8 +151,8 @@ export default function LoginPage() {
             </div>
 
             {/* Login Button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full bg-[#87a1c0] hover:bg-[#7691af] text-white font-medium py-2.5 rounded-lg mt-2 transition-colors disabled:opacity-70 flex justify-center items-center"
             >
@@ -150,7 +169,7 @@ export default function LoginPage() {
             <Link href="/forgot-password" className="text-[#203a61] text-sm hover:underline font-medium">
               Forgot your password?
             </Link>
-            
+
             <Link href="/" className="flex items-center gap-2 text-[#6c7b93] text-sm hover:text-[#4b5563] transition-colors mt-2">
               <ArrowLeft size={16} />
               Back to home
