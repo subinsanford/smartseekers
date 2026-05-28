@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { StatCard } from "../../../components/StatCard";
+import { DashboardSkeleton } from "../../../components/DashboardSkeleton";
+import { DashboardError } from "../../../components/DashboardError";
+import { RequestCreditsModal } from "../../../components/RequestCreditsModal";
 import {
   FileText, Users, Clock, CheckCircle2,
   DollarSign, CreditCard, Activity, Bell,
@@ -33,117 +37,23 @@ const creditTrendData = [
 ];
 
 const activeJobs = [
-  { title: "Junior Python Developer",  added: "26/03/2026" },
-  { title: "Junior Data Analyst",      added: "06/01/2026" },
+  { title: "Junior Python Developer", added: "26/03/2026" },
+  { title: "Junior Data Analyst", added: "06/01/2026" },
   { title: "Senior Cloud Architect 2", added: "10/12/2025" },
 ];
 
 const draftJobs = [{ title: "ServiceNow Project Manager / Scrum Master" }];
 
 const candidateProfiles = [
-  { name: "Karthick Ravi",       role: "Software Engineer", initials: "KR", color: "#3b82f6" },
-  { name: "Sharat Kariyannavar", role: "Data Engineer",     initials: "SK", color: "#22c55e" },
-  { name: "Arjen Robbon",        role: "Recruiter",         initials: "AR", color: "#f59e0b" },
+  { name: "Karthick Ravi", role: "Software Engineer", initials: "KR", color: "#3b82f6" },
+  { name: "Sharat Kariyannavar", role: "Data Engineer", initials: "SK", color: "#22c55e" },
+  { name: "Arjen Robbon", role: "Recruiter", initials: "AR", color: "#f59e0b" },
 ];
-
-/* ─── Stat Card ─── */
-function StatCard({
-  label, value, sub, icon: Icon, action,
-}: {
-  label: string; value: string | number; sub: string;
-  icon: React.ElementType; action?: React.ReactNode;
-}) {
-  return (
-    <div className={styles.statCard}>
-      <div className={styles.statTop}>
-        <div style={{ flex: 1 }}>
-          <div className={styles.walletHeaderRow}>
-            <p className={styles.statLabel}>{label}</p>
-            {action}
-          </div>
-          <p className={styles.statValue}>{value}</p>
-          <p className={styles.statSub}>{sub}</p>
-        </div>
-        <div className={styles.statIconWrap} style={{ marginLeft: 12 }}>
-          <Icon size={22} color="#64748b" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Loading Skeleton Loader ─── */
-function DashboardSkeleton() {
-  return (
-    <div className={styles.page}>
-      <header className={styles.topbar}>
-        <div className={styles.topbarLeft}>
-          <Home size={18} className={styles.topbarHomeIcon} />
-          <h1 className={styles.topbarTitle}>Loading Dashboard...</h1>
-        </div>
-      </header>
-      <main className={styles.content}>
-        <section className={styles.statsGrid}>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className={styles.statCard}>
-              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "60%" }} />
-              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "80%", height: 36, margin: "8px 0" }} />
-              <div className={`${styles.skeleton} ${styles.skeletonTextShort}`} />
-            </div>
-          ))}
-        </section>
-        <section className={styles.statsGrid}>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className={styles.statCard}>
-              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "60%" }} />
-              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "80%", height: 36, margin: "8px 0" }} />
-              <div className={`${styles.skeleton} ${styles.skeletonTextShort}`} />
-            </div>
-          ))}
-        </section>
-        <section className={styles.chartsRow}>
-          <div className={styles.card}>
-            <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "40%", height: 20 }} />
-            <div className={`${styles.skeleton}`} style={{ width: "100%", height: 220, marginTop: 16 }} />
-          </div>
-          <div className={styles.card}>
-            <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: "40%", height: 20 }} />
-            <div className={`${styles.skeleton}`} style={{ width: "100%", height: 220, marginTop: 16 }} />
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-}
-
-/* ─── Dashboard Error View ─── */
-function DashboardError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className={styles.page}>
-      <header className={styles.topbar}>
-        <div className={styles.topbarLeft}>
-          <Home size={18} className={styles.topbarHomeIcon} />
-          <h1 className={styles.topbarTitle}>Dashboard Error</h1>
-        </div>
-      </header>
-      <main className={styles.content}>
-        <div className={styles.errorContainer}>
-          <AlertTriangle size={32} color="#dc2626" style={{ marginBottom: "1rem" }} />
-          <h2 className={styles.errorTitle}>Error Loading Dashboard</h2>
-          <p className={styles.errorMessage}>{message}</p>
-          <button className={styles.retryBtn} onClick={onRetry}>
-            Retry Loading
-          </button>
-        </div>
-      </main>
-    </div>
-  );
-}
 
 /* ─── Page ─── */
 export default function RecruiterHome() {
   const router = useRouter();
-  
+
   // Dashboard loading & data states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +67,7 @@ export default function RecruiterHome() {
   const [requestSuccess, setRequestSuccess] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -177,7 +87,7 @@ export default function RecruiterHome() {
     } catch (err: any) {
       console.error("Dashboard failed to fetch stats:", err);
       setError(err.message || "Failed to load dashboard statistics. Please ensure you are logged in.");
-      
+
       // Auto redirect to login on auth failure
       if (err.message?.toLowerCase().includes("unauthorized") || err.message?.toLowerCase().includes("token") || err.status === 401) {
         if (typeof window !== 'undefined') {
@@ -188,13 +98,13 @@ export default function RecruiterHome() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     loadData();
-  }, [router]);
+  }, [loadData]);
 
-  const handleRequestSubmit = async (e: React.FormEvent) => {
+  const handleRequestSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingRequest(true);
     setRequestError(null);
@@ -209,46 +119,38 @@ export default function RecruiterHome() {
     } finally {
       setIsSubmittingRequest(false);
     }
-  };
+  }, [requestMessage]);
 
-  const templates = [
+  const templates = useMemo(() => [
     "Hey team, we need more credits to schedule 10 more candidates for the engineering role.",
     "We are expanding our search and need 20 extra credits for upcoming technical interviews.",
     "Need 5 additional credits to schedule final-round panel reviews for our Senior Developer pipeline."
-  ];
-
-  if (loading) {
-    return <DashboardSkeleton />;
-  }
-
-  if (error) {
-    return <DashboardError message={error} onRetry={loadData} />;
-  }
+  ], []);
 
   // Construct Pie Chart Data Dynamically
-  const statusColors = {
+  const statusColors = useMemo(() => ({
     completed: "#10b981", // green-500
     scheduled: "#f59e0b", // amber-500
     cancelled: "#ef4444", // red-500
     no_show: "#64748b",   // slate-500
     rescheduled: "#3b82f6" // blue-500
-  };
+  }), []);
 
-  const dynamicStatusData = [
-    { name: "Completed",   value: interviewStats?.status_breakdown.completed || 0, color: statusColors.completed },
-    { name: "Scheduled",   value: interviewStats?.status_breakdown.scheduled || 0, color: statusColors.scheduled },
-    { name: "Cancelled",   value: interviewStats?.status_breakdown.cancelled || 0, color: statusColors.cancelled },
-    { name: "No Show",     value: interviewStats?.status_breakdown.no_show || 0, color: statusColors.no_show },
+  const dynamicStatusData = useMemo(() => [
+    { name: "Completed", value: interviewStats?.status_breakdown.completed || 0, color: statusColors.completed },
+    { name: "Scheduled", value: interviewStats?.status_breakdown.scheduled || 0, color: statusColors.scheduled },
+    { name: "Cancelled", value: interviewStats?.status_breakdown.cancelled || 0, color: statusColors.cancelled },
+    { name: "No Show", value: interviewStats?.status_breakdown.no_show || 0, color: statusColors.no_show },
     { name: "Rescheduled", value: interviewStats?.status_breakdown.rescheduled || 0, color: statusColors.rescheduled },
-  ].filter(item => item.value > 0);
+  ].filter(item => item.value > 0), [interviewStats, statusColors]);
 
   // Construct Dynamic Recruiter Credit Spent Data
-  const spentPalette = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4"];
-  const totalSpent = creditStats?.spent_breakdown.reduce((acc, curr) => acc + curr.credits_spent, 0) || 0;
-  const currentBalance = creditStats?.current_balance || 0;
-  const dynamicMax = currentBalance + totalSpent || 1000;
+  const spentPalette = useMemo(() => ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4"], []);
+  const totalSpent = useMemo(() => creditStats?.spent_breakdown.reduce((acc, curr) => acc + curr.credits_spent, 0) || 0, [creditStats]);
+  const currentBalance = useMemo(() => creditStats?.current_balance || 0, [creditStats]);
+  const dynamicMax = useMemo(() => currentBalance + totalSpent || 1000, [currentBalance, totalSpent]);
 
-  const dynamicUserCreditData = (creditStats?.spent_breakdown || []).map((user, idx) => {
+  const dynamicUserCreditData = useMemo(() => (creditStats?.spent_breakdown || []).map((user, idx) => {
     const initials = user.user_name
       ? user.user_name.split(" ").map(part => part[0]).join("").toUpperCase().slice(0, 2)
       : "U";
@@ -260,7 +162,15 @@ export default function RecruiterHome() {
       color: spentPalette[idx % spentPalette.length],
       initials
     };
-  });
+  }), [creditStats, dynamicMax, spentPalette]);
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <DashboardError message={error} onRetry={loadData} />;
+  }
 
   return (
     <div className={styles.page}>
@@ -290,21 +200,21 @@ export default function RecruiterHome() {
 
         {/* ── Stats Row 1 ── */}
         <section className={styles.statsGrid}>
-          <StatCard label="Active Jobs Postings"   value={activeJobs.length}  sub="+0 this month"        icon={FileText}      />
-          <StatCard label="Candidates"             value={candidateProfiles.length}  sub="+0 this month"        icon={Users}         />
-          <StatCard label="Pending Interviews"     value={interviewStats?.status_breakdown.scheduled || 0}  sub="Upcoming Interviews"  icon={Clock}         />
-          <StatCard label="Completed Interviews"   value={interviewStats?.status_breakdown.completed || 0}  sub="This week"            icon={CheckCircle2}  />
+          <StatCard label="Active Jobs Postings" value={activeJobs.length} sub="+0 this month" icon={FileText} />
+          <StatCard label="Candidates" value={candidateProfiles.length} sub="+0 this month" icon={Users} />
+          <StatCard label="Pending Interviews" value={interviewStats?.status_breakdown.scheduled || 0} sub="Upcoming Interviews" icon={Clock} />
+          <StatCard label="Completed Interviews" value={interviewStats?.status_breakdown.completed || 0} sub="This week" icon={CheckCircle2} />
         </section>
 
         {/* ── Stats Row 2 ── */}
         <section className={styles.statsGrid}>
-          <StatCard 
-            label="Current Balance"    
-            value={creditStats?.current_balance || 0} 
-            sub="Available credits"    
+          <StatCard
+            label="Current Balance"
+            value={creditStats?.current_balance || 0}
+            sub="Available credits"
             icon={DollarSign}
             action={
-              <button 
+              <button
                 className={styles.requestCreditsTriggerBtn}
                 onClick={() => {
                   setRequestSuccess(false);
@@ -316,9 +226,9 @@ export default function RecruiterHome() {
               </button>
             }
           />
-          <StatCard label="Lifetime Purchased" value={creditStats?.lifetime_purchased || 0}  sub="Total credits bought" icon={CreditCard}  />
-          <StatCard label="Total Interviews"   value={interviewStats?.status_breakdown.total_interviews || 0}   sub="All time interviews"  icon={Activity}    />
-          <StatCard label="Completed"          value={interviewStats?.status_breakdown.completed || 0}    sub="Successful interviews" icon={CheckCircle2} />
+          <StatCard label="Lifetime Purchased" value={creditStats?.lifetime_purchased || 0} sub="Total credits bought" icon={CreditCard} />
+          <StatCard label="Total Interviews" value={interviewStats?.status_breakdown.total_interviews || 0} sub="All time interviews" icon={Activity} />
+          <StatCard label="Completed" value={interviewStats?.status_breakdown.completed || 0} sub="Successful interviews" icon={CheckCircle2} />
         </section>
 
         {/* ── Charts Row ── */}
@@ -337,7 +247,7 @@ export default function RecruiterHome() {
               <AreaChart data={creditTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="creditGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.25} />
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
@@ -426,11 +336,11 @@ export default function RecruiterHome() {
             {/* Dynamic Status Legend */}
             <div className={styles.pieLegend}>
               {[
-                { name: "Cancelled",   color: "#ef4444" },
-                { name: "Completed",   color: "#10b981" },
-                { name: "No Show",     color: "#64748b" },
+                { name: "Cancelled", color: "#ef4444" },
+                { name: "Completed", color: "#10b981" },
+                { name: "No Show", color: "#64748b" },
                 { name: "Rescheduled", color: "#3b82f6" },
-                { name: "Scheduled",   color: "#f59e0b" },
+                { name: "Scheduled", color: "#f59e0b" },
               ].map((item) => (
                 <span key={item.name} className={styles.pieLegendItem}>
                   <span className={styles.pieLegendDot} style={{ background: item.color }} />
@@ -462,7 +372,7 @@ export default function RecruiterHome() {
                   <p className={styles.cardSubtitle}>No job interview records.</p>
                 )}
               </div>
-              
+
               <p className={styles.topSectionLabel} style={{ marginTop: "1rem" }}>Top Candidates</p>
               <div className={styles.topTagsWrap}>
                 {interviewStats?.interviews_by_candidate && interviewStats.interviews_by_candidate.length > 0 ? (
@@ -558,95 +468,17 @@ export default function RecruiterHome() {
       </main>
 
       {/* ── Glassmorphic Request Credits Modal Overlay ── */}
-      {isRequestModalOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsRequestModalOpen(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Request Credits</h3>
-              <button className={styles.modalClose} onClick={() => setIsRequestModalOpen(false)}>
-                <X size={18} />
-              </button>
-            </div>
-
-            {requestSuccess ? (
-              <div className={styles.successMessage}>
-                <div style={{ background: "#d1fae5", padding: "12px", borderRadius: "50%", display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
-                  <Check size={28} color="#059669" />
-                </div>
-                <h4 className={styles.successTitle}>Request Sent Successfully</h4>
-                <p className={styles.successDesc}>Your admin has been notified by email template.</p>
-                <button 
-                  className={styles.submitBtn} 
-                  style={{ width: "100%", justifyContent: "center" }}
-                  onClick={() => setIsRequestModalOpen(false)}
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleRequestSubmit}>
-                {requestError && (
-                  <div style={{ color: "#dc2626", background: "#fef2f2", padding: "8px 12px", borderRadius: "6px", fontSize: "0.8rem", marginBottom: "12px", border: "1px solid #fee2e2" }}>
-                    {requestError}
-                  </div>
-                )}
-                
-                <div className={styles.formGroup}>
-                  <label className={styles.templateLabel}>Custom Message</label>
-                  <textarea 
-                    className={styles.textarea}
-                    placeholder="Provide details on why you need additional recruiter credits..."
-                    value={requestMessage}
-                    onChange={(e) => setRequestMessage(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.templateLabel}>Quick Templates</label>
-                  <div className={styles.templateGrid}>
-                    {templates.map((tpl, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className={styles.templateTag}
-                        onClick={() => setRequestMessage(tpl)}
-                      >
-                        {tpl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={styles.modalActions}>
-                  <button 
-                    type="button" 
-                    className={styles.cancelBtn} 
-                    onClick={() => setIsRequestModalOpen(false)}
-                    disabled={isSubmittingRequest}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    className={styles.submitBtn}
-                    disabled={isSubmittingRequest || !requestMessage.trim()}
-                  >
-                    {isSubmittingRequest ? (
-                      <>
-                        <span className={styles.spinner} />
-                        Sending...
-                      </>
-                    ) : (
-                      "Submit Request"
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      <RequestCreditsModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        requestSuccess={requestSuccess}
+        requestError={requestError}
+        requestMessage={requestMessage}
+        setRequestMessage={setRequestMessage}
+        isSubmittingRequest={isSubmittingRequest}
+        handleRequestSubmit={handleRequestSubmit}
+        templates={templates}
+      />
 
     </div>
   );

@@ -1,6 +1,6 @@
  "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -134,9 +134,9 @@ const staggerContainer = {
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const toggleFaq = (index: number) => {
+  const toggleFaq = useCallback((index: number) => {
     setOpenFaq(openFaq === index ? null : index);
-  };
+  }, [openFaq]);
 
   return (
     <div className={styles.main}>
