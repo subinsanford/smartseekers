@@ -152,8 +152,10 @@ export interface GetJobsResponse {
 }
 
 export interface CreateJobPayload {
-  job_position: string;
-  description?: string;
+  title: string;
+  description: string;
+  status: string;
+  requirements: string[];
   [key: string]: any;
 }
 
@@ -178,6 +180,56 @@ export const createJob = async (payload: CreateJobPayload): Promise<any> => {
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.message || 'Failed to create job posting.');
+  }
+  return data;
+};
+
+export const getJobById = async (id: number): Promise<any> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/${id}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch job details.');
+  }
+  return data;
+};
+
+export const updateJob = async (id: number, payload: Partial<CreateJobPayload>): Promise<any> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/update/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to update job posting.');
+  }
+  return data;
+};
+
+export const updateJobStatus = async (id: number, status: string): Promise<any> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/status/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ status }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to update job status.');
+  }
+  return data;
+};
+
+export const deleteJob = async (id: number): Promise<any> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/delete/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to delete job posting.');
   }
   return data;
 };

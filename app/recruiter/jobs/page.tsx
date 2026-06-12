@@ -11,17 +11,73 @@ import {
   ChevronRight,
   ChevronsRight,
   ChevronDown,
-  Download
+  Download,
+  Eye,
+  Edit2,
+  RefreshCw,
+  Trash2
 } from "lucide-react";
-import { getJobs, JobPosting } from "../../../lib/api";
+import { getJobs, JobPosting, getJobById, updateJob, updateJobStatus, deleteJob } from "../../../lib/api";
 import { DashboardSkeleton } from "../../../components/DashboardSkeleton";
 import { DashboardError } from "../../../components/DashboardError";
+import { AddJobModal } from "../../../components/AddJobModal";
 
 export default function JobPostingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<number | string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    if (activeMenuId !== null) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [activeMenuId]);
+
+  const handleView = async (id: any) => {
+    setActiveMenuId(null);
+    console.log("View Job", id);
+    try {
+      // const jobData = await getJobById(id);
+      // alert("View job details logic goes here.");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEdit = async (id: any) => {
+    setActiveMenuId(null);
+    console.log("Edit Job", id);
+    // Logic to open edit modal and use updateJob(id, payload)
+  };
+
+  const handleUpdateStatus = async (id: any) => {
+    setActiveMenuId(null);
+    console.log("Update Status", id);
+    try {
+      // await updateJobStatus(id, "draft"); // Example
+      // loadJobs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id: any) => {
+    setActiveMenuId(null);
+    if (window.confirm("Are you sure you want to delete this job posting?")) {
+      try {
+        await deleteJob(id);
+        loadJobs();
+      } catch (err: any) {
+        console.error("Delete error:", err);
+        alert(err.message || "Failed to delete job.");
+      }
+    }
+  };
 
   const loadJobs = useCallback(async () => {
     try {
@@ -76,7 +132,7 @@ export default function JobPostingsPage() {
           <button className={styles.actionBtn}>
             <Download size={16} /> Import Job Postings
           </button>
-          <button className={styles.actionBtn}>
+          <button className={styles.actionBtn} onClick={() => setIsAddModalOpen(true)}>
             <FilePlus size={16} /> Add Job Posting
           </button>
         </div>
@@ -131,9 +187,27 @@ export default function JobPostingsPage() {
                   <span className={`${styles.statusText} ${styles[statusLower] || ""}`}>{statusStr}</span>
                 </div>
                 <div className={styles.colAction}>
-                  <button className={styles.moreBtn}>
-                    <MoreVertical size={16} />
-                  </button>
+                  <div className={styles.actionMenuContainer} onClick={(e) => e.stopPropagation()}>
+                    <button className={styles.moreBtn} onClick={() => setActiveMenuId(activeMenuId === (job.job_id || idx) ? null : (job.job_id || idx))}>
+                      <MoreVertical size={16} />
+                    </button>
+                    {activeMenuId === (job.job_id || idx) && (
+                      <div className={styles.actionMenu}>
+                        <button className={styles.actionMenuItem} onClick={() => handleView(job.job_id)}>
+                          <Eye size={16} /> View
+                        </button>
+                        <button className={styles.actionMenuItem} onClick={() => handleEdit(job.job_id)}>
+                          <Edit2 size={16} /> Edit
+                        </button>
+                        <button className={styles.actionMenuItem} onClick={() => handleUpdateStatus(job.job_id)}>
+                          <RefreshCw size={16} /> Update Status
+                        </button>
+                        <button className={styles.actionMenuItem} onClick={() => handleDelete(job.job_id)}>
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -163,6 +237,11 @@ export default function JobPostingsPage() {
         </div>
       </div>
       
+      <AddJobModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onJobAdded={loadJobs} 
+      />
     </div>
   );
 }
