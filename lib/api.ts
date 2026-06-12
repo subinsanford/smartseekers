@@ -133,3 +133,51 @@ export const requestCredits = async (message?: string): Promise<RequestCreditsRe
   return data;
 };
 
+export interface JobPosting {
+  job_id: number;
+  unique_job_id: string;
+  job_title: string;
+  created_on: string;
+  status: number;
+  [key: string]: any;
+}
+
+export interface GetJobsResponse {
+  ok: boolean;
+  jobs: JobPosting[];
+  page?: number;
+  page_size?: number;
+  total?: number;
+  total_pages?: number;
+}
+
+export interface CreateJobPayload {
+  job_position: string;
+  description?: string;
+  [key: string]: any;
+}
+
+export const getJobs = async (page = 1, pageSize = 10): Promise<GetJobsResponse> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/all?page=${page}&page_size=${pageSize}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to fetch job postings.');
+  }
+  return data;
+};
+
+export const createJob = async (payload: CreateJobPayload): Promise<any> => {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/create`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create job posting.');
+  }
+  return data;
+};
