@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import {
   Bell,
@@ -21,13 +22,23 @@ import { getJobs, JobPosting, getJobById, updateJob, updateJobStatus, deleteJob 
 import { DashboardSkeleton } from "../../../components/DashboardSkeleton";
 import { DashboardError } from "../../../components/DashboardError";
 import { AddJobModal } from "../../../components/AddJobModal";
+import { EditJobModal } from "../../../components/EditJobModal";
+import { UpdateStatusModal } from "../../../components/UpdateStatusModal";
+import { DeleteJobModal } from "../../../components/DeleteJobModal";
 
 export default function JobPostingsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState<JobPosting | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusEditingJob, setStatusEditingJob] = useState<JobPosting | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingJobId, setDeletingJobId] = useState<number | string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<number | string | null>(null);
 
   useEffect(() => {
@@ -41,42 +52,27 @@ export default function JobPostingsPage() {
   const handleView = async (id: any) => {
     setActiveMenuId(null);
     console.log("View Job", id);
-    try {
-      // const jobData = await getJobById(id);
-      // alert("View job details logic goes here.");
-    } catch (err) {
-      console.error(err);
-    }
+    router.push(`/recruiter/jobs/${id}`);
   };
 
-  const handleEdit = async (id: any) => {
+  const handleEdit = async (job: JobPosting) => {
     setActiveMenuId(null);
-    console.log("Edit Job", id);
-    // Logic to open edit modal and use updateJob(id, payload)
+    console.log("Edit Job", job.job_id);
+    setEditingJob(job);
+    setIsEditModalOpen(true);
   };
 
-  const handleUpdateStatus = async (id: any) => {
+  const handleUpdateStatus = async (job: JobPosting) => {
     setActiveMenuId(null);
-    console.log("Update Status", id);
-    try {
-      // await updateJobStatus(id, "draft"); // Example
-      // loadJobs();
-    } catch (err) {
-      console.error(err);
-    }
+    console.log("Update Status", job.job_id);
+    setStatusEditingJob(job);
+    setIsStatusModalOpen(true);
   };
 
-  const handleDelete = async (id: any) => {
+  const handleDelete = (id: any) => {
     setActiveMenuId(null);
-    if (window.confirm("Are you sure you want to delete this job posting?")) {
-      try {
-        await deleteJob(id);
-        loadJobs();
-      } catch (err: any) {
-        console.error("Delete error:", err);
-        alert(err.message || "Failed to delete job.");
-      }
-    }
+    setDeletingJobId(id);
+    setIsDeleteModalOpen(true);
   };
 
   const loadJobs = useCallback(async () => {
@@ -196,10 +192,10 @@ export default function JobPostingsPage() {
                         <button className={styles.actionMenuItem} onClick={() => handleView(job.job_id)}>
                           <Eye size={16} /> View
                         </button>
-                        <button className={styles.actionMenuItem} onClick={() => handleEdit(job.job_id)}>
+                        <button className={styles.actionMenuItem} onClick={() => handleEdit(job)}>
                           <Edit2 size={16} /> Edit
                         </button>
-                        <button className={styles.actionMenuItem} onClick={() => handleUpdateStatus(job.job_id)}>
+                        <button className={styles.actionMenuItem} onClick={() => handleUpdateStatus(job)}>
                           <RefreshCw size={16} /> Update Status
                         </button>
                         <button className={styles.actionMenuItem} onClick={() => handleDelete(job.job_id)}>
@@ -241,6 +237,36 @@ export default function JobPostingsPage() {
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onJobAdded={loadJobs} 
+      />
+
+      <EditJobModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingJob(null);
+        }}
+        job={editingJob}
+        onJobUpdated={loadJobs}
+      />
+
+      <UpdateStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => {
+          setIsStatusModalOpen(false);
+          setStatusEditingJob(null);
+        }}
+        job={statusEditingJob}
+        onStatusUpdated={loadJobs}
+      />
+
+      <DeleteJobModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingJobId(null);
+        }}
+        jobId={deletingJobId}
+        onJobDeleted={loadJobs}
       />
     </div>
   );

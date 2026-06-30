@@ -185,7 +185,7 @@ export const createJob = async (payload: CreateJobPayload): Promise<any> => {
 };
 
 export const getJobById = async (id: number): Promise<any> => {
-  const response = await fetch(`${getBaseUrl()}/employer/jobs/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/info/${id}`, {
     method: 'GET',
     headers: getHeaders(),
   });
@@ -197,7 +197,7 @@ export const getJobById = async (id: number): Promise<any> => {
 };
 
 export const updateJob = async (id: number, payload: Partial<CreateJobPayload>): Promise<any> => {
-  const response = await fetch(`${getBaseUrl()}/employer/jobs/update/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -210,10 +210,10 @@ export const updateJob = async (id: number, payload: Partial<CreateJobPayload>):
 };
 
 export const updateJobStatus = async (id: number, status: string): Promise<any> => {
-  const response = await fetch(`${getBaseUrl()}/employer/jobs/status/${id}`, {
-    method: 'PUT',
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/update_status`, {
+    method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ job_id: id, status }),
   });
   const data = await response.json();
   if (!response.ok) {
@@ -223,7 +223,7 @@ export const updateJobStatus = async (id: number, status: string): Promise<any> 
 };
 
 export const deleteJob = async (id: number): Promise<any> => {
-  const response = await fetch(`${getBaseUrl()}/employer/jobs/delete/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/employer/jobs/${id}?force=true`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
